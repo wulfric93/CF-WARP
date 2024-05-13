@@ -79,6 +79,8 @@ func main() {
 		scan     = fs.BoolLong("scan", "enable warp scanning")
 		rtt      = fs.DurationLong("rtt", 1000*time.Millisecond, "scanner rtt limit")
 		cacheDir = fs.StringLong("cache-dir", "", "directory to store generated profiles")
+		tun      = fs.BoolLong("tun-experimental", "enable tun interface (experimental)")
+		fwmark   = fs.UintLong("fwmark", 0x1375, "set linux firewall mark for tun mode")
 		_        = fs.String('c', "config", "", "path to config file")
 		verFlag  = fs.BoolLong("version", "displays version number")
 	)
@@ -134,6 +136,8 @@ func main() {
 		Endpoint: *endpoint,
 		License:  *key,
 		Gool:     *gool,
+		Tun:      *tun,
+		FwMark:   uint32(*fwmark),
 	}
 
 	switch {
@@ -155,6 +159,10 @@ func main() {
 	if *scan {
 		l.Info("scanner mode enabled", "max-rtt", rtt)
 		opts.Scan = &wiresocks.ScanOptions{V4: *v4, V6: *v6, MaxRTT: *rtt}
+	}
+
+	if *tun {
+		l.Info("tun mode enabled")
 	}
 
 	// If the endpoint is not set, choose a random warp endpoint
