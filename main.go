@@ -183,7 +183,7 @@ func main() {
 		opts.Endpoint = addrPort.String()
 	}
 
-	if opts.WireguardConfig != "" {
+	if opts.WireguardConfig == "" {
 		// create identities
 		if err := createPrimaryAndSecondaryIdentities(l.With("subsystem", "warp/account"), opts); err != nil {
 			fatal(l, err)
