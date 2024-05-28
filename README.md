@@ -38,6 +38,7 @@ FLAGS
       --cache-dir STRING   directory to store generated profiles
       --tun-experimental   enable tun interface (experimental)
       --fwmark UINT        set linux firewall mark for tun mode (default: 4981)
+      --reserved STRING    override wireguard reserved value (format: '1,2,3')
       --wgconf STRING      path to a normal wireguard config
   -c, --config STRING      path to config file
       --version            displays version number

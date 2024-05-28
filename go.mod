@@ -13,7 +13,6 @@ require (
 	github.com/frankban/quicktest v1.14.6
 	github.com/go-ini/ini v1.67.0
 	github.com/google/go-cmp v0.6.0
-	github.com/hashicorp/golang-lru v1.0.2
 	github.com/peterbourgon/ff/v4 v4.0.0-alpha.4
 	github.com/quic-go/quic-go v0.43.1
 	github.com/refraction-networking/utls v1.3.3
@@ -49,6 +48,7 @@ require (
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/pprof v0.0.0-20211214055906-6f57359322fd // indirect
 	github.com/grafov/m3u8 v0.0.0-20171211212457-6ab8f28ed427 // indirect
+	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/juju/ratelimit v1.0.2 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
