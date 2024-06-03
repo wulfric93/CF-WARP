@@ -17,7 +17,6 @@ import (
 
 const singleMTU = 1330
 const doubleMTU = 1280 // minimum mtu for IPv6, may cause frag reassembly somewhere
-const connTestEndpoint = "http://1.1.1.1:80/"
 
 type WarpOptions struct {
 	Bind            netip.AddrPort

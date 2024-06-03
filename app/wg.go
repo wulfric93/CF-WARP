@@ -16,6 +16,8 @@ import (
 	"github.com/bepass-org/warp-plus/wiresocks"
 )
 
+const connTestEndpoint = "https://www.gstatic.com/generate_204"
+
 func newUsermodeTun(conf *wiresocks.Configuration) (wgtun.Device, *netstack.Net, error) {
 	tunDev, tnet, err := netstack.CreateNetTUN(conf.Interface.Addresses, conf.Interface.DNS, conf.Interface.MTU)
 	if err != nil {
