@@ -159,10 +159,10 @@ func runWireguard(ctx context.Context, l *slog.Logger, opts WarpOptions) error {
 		return err
 	}
 
-	// Test wireguard connectivity
-	if err := usermodeTunTest(ctx, l, tnet); err != nil {
-		return err
-	}
+	// // Test wireguard connectivity
+	// if err := usermodeTunTest(ctx, l, tnet); err != nil {
+	// 	return err
+	// }
 
 	// Run a proxy on the userspace stack
 	_, err = wiresocks.StartProxy(ctx, l, tnet, opts.Bind)
@@ -233,10 +233,10 @@ func runWarp(ctx context.Context, l *slog.Logger, opts WarpOptions, endpoint str
 		return err
 	}
 
-	// Test wireguard connectivity
-	if err := usermodeTunTest(ctx, l, tnet); err != nil {
-		return err
-	}
+	// // Test wireguard connectivity
+	// if err := usermodeTunTest(ctx, l, tnet); err != nil {
+	// 	return err
+	// }
 
 	// Run a proxy on the userspace stack
 	_, err = wiresocks.StartProxy(ctx, l, tnet, opts.Bind)
@@ -291,10 +291,10 @@ func runWarpInWarp(ctx context.Context, l *slog.Logger, opts WarpOptions, endpoi
 		return err
 	}
 
-	// Test wireguard connectivity
-	if err := usermodeTunTest(ctx, l, tnet); err != nil {
-		return err
-	}
+	// // Test wireguard connectivity
+	// if err := usermodeTunTest(ctx, l, tnet); err != nil {
+	// 	return err
+	// }
 
 	// Create a UDP port forward between localhost and the remote endpoint
 	addr, err := wiresocks.NewVtunUDPForwarder(ctx, netip.MustParseAddrPort("127.0.0.1:0"), endpoints[0], tnet, singleMTU)
@@ -359,10 +359,10 @@ func runWarpInWarp(ctx context.Context, l *slog.Logger, opts WarpOptions, endpoi
 		return err
 	}
 
-	// Test wireguard connectivity
-	if err := usermodeTunTest(ctx, l, tnet); err != nil {
-		return err
-	}
+	// // Test wireguard connectivity
+	// if err := usermodeTunTest(ctx, l, tnet); err != nil {
+	// 	return err
+	// }
 
 	_, err = wiresocks.StartProxy(ctx, l, tnet, opts.Bind)
 	if err != nil {
@@ -416,10 +416,10 @@ func runWarpWithPsiphon(ctx context.Context, l *slog.Logger, opts WarpOptions, e
 		return err
 	}
 
-	// Test wireguard connectivity
-	if err := usermodeTunTest(ctx, l, tnet); err != nil {
-		return err
-	}
+	// // Test wireguard connectivity
+	// if err := usermodeTunTest(ctx, l, tnet); err != nil {
+	// 	return err
+	// }
 
 	// Run a proxy on the userspace stack
 	warpBind, err := wiresocks.StartProxy(ctx, l, tnet, netip.MustParseAddrPort("127.0.0.1:0"))
