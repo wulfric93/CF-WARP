@@ -47,9 +47,9 @@ FLAGS
 ### Country Codes for Psiphon
 
 - Austria (AT)
+- Australia (AU)
 - Belgium (BE)
 - Bulgaria (BG)
-- Brazil (BR)
 - Canada (CA)
 - Switzerland (CH)
 - Czech Republic (CZ)
@@ -60,8 +60,8 @@ FLAGS
 - Finland (FI)
 - France (FR)
 - United Kingdom (GB)
-- Hungary (HU)
 - Croatia (HR)
+- Hungary (HU)
 - Ireland (IE)
 - India (IN)
 - Italy (IT)
@@ -76,7 +76,6 @@ FLAGS
 - Sweden (SE)
 - Singapore (SG)
 - Slovakia (SK)
-- Ukraine (UA)
 - United States (US)
 ![0](https://raw.githubusercontent.com/Ptechgithub/configs/main/media/line.gif)
 ### Termux

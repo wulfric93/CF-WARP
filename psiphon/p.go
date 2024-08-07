@@ -18,7 +18,6 @@ var Countries = []string{
 	"AU",
 	"BE",
 	"BG",
-	"BR",
 	"CA",
 	"CH",
 	"CZ",
@@ -31,7 +30,6 @@ var Countries = []string{
 	"GB",
 	"HR",
 	"HU",
-	"ID",
 	"IE",
 	"IN",
 	"IT",
@@ -46,7 +44,6 @@ var Countries = []string{
 	"SE",
 	"SG",
 	"SK",
-	"UA",
 	"US",
 }
 
