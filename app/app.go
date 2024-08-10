@@ -39,75 +39,129 @@ type PsiphonOptions struct {
 	Country string
 }
 
-func RunWarp(ctx context.Context, l *slog.Logger, opts WarpOptions) error {
-	if opts.WireguardConfig != "" {
-		if err := runWireguard(ctx, l, opts); err != nil {
-			return err
-		}
+type WarpService struct {
+	l             *slog.Logger
+	opts          WarpOptions
+	ctx           context.Context
+	ctxCancelFunc context.CancelFunc
+}
 
-		return nil
+func NewWarpService(l *slog.Logger, opts WarpOptions) *WarpService {
+	return &WarpService{l: l, opts: opts}
+}
+
+func (w *WarpService) ScanEndpoints(ctx context.Context) ([]string, error) {
+	// make primary identity
+	ident, err := warp.LoadOrCreateIdentity(w.l, path.Join(w.opts.CacheDir, "primary"), w.opts.License)
+	if err != nil {
+		w.l.Error("couldn't load primary warp identity")
+		return nil, err
 	}
 
-	if opts.Psiphon != nil && opts.Gool {
-		return errors.New("can't use psiphon and gool at the same time")
+	// Reading the private key from the 'Interface' section
+	w.opts.Scan.PrivateKey = ident.PrivateKey
+
+	// Reading the public key from the 'Peer' section
+	w.opts.Scan.PublicKey = ident.Config.Peers[0].PublicKey
+
+	res, err := wiresocks.RunScan(ctx, w.l, *w.opts.Scan)
+	if err != nil {
+		return nil, err
 	}
 
-	if opts.Psiphon != nil && opts.Psiphon.Country == "" {
-		return errors.New("must provide country for psiphon")
+	w.l.Debug("scan results", "endpoints", res)
+
+	endpoints := make([]string, len(res))
+	for i := 0; i < len(res); i++ {
+		endpoints[i] = res[i].AddrPort.String()
 	}
 
-	if opts.Psiphon != nil && opts.Tun {
-		return errors.New("can't use psiphon and tun at the same time")
+	return endpoints, nil
+}
+
+func (w *WarpService) StartPlainWireguard() error {
+	if w.opts.WireguardConfig == "" {
+		return errors.New("no wireguard config provided")
 	}
 
-	// Decide Working Scenario
-	endpoints := []string{opts.Endpoint, opts.Endpoint}
+	w.ctx, w.ctxCancelFunc = context.WithCancel(context.Background())
+	if err := runWireguard(w.ctx, w.l, w.opts); err != nil {
+		return err
+	}
 
-	if opts.Scan != nil {
-		// make primary identity
-		ident, err := warp.LoadOrCreateIdentity(l, path.Join(opts.CacheDir, "primary"), opts.License)
+	return nil
+}
+
+func (w *WarpService) StartWarp() error {
+	w.l.Info("running in normal warp mode")
+	w.ctx, w.ctxCancelFunc = context.WithCancel(context.Background())
+
+	endpoints := []string{w.opts.Endpoint, w.opts.Endpoint}
+	if w.opts.Scan != nil {
+		e, err := w.ScanEndpoints(w.ctx)
 		if err != nil {
-			l.Error("couldn't load primary warp identity")
 			return err
 		}
+		endpoints = e
+	}
+	w.l.Info("using warp endpoints", "endpoints", endpoints)
 
-		// Reading the private key from the 'Interface' section
-		opts.Scan.PrivateKey = ident.PrivateKey
+	// just run primary warp on bindAddress
+	if err := runWarp(w.ctx, w.l, w.opts, endpoints[0]); err != nil {
+		return err
+	}
 
-		// Reading the public key from the 'Peer' section
-		opts.Scan.PublicKey = ident.Config.Peers[0].PublicKey
+	return nil
+}
 
-		res, err := wiresocks.RunScan(ctx, l, *opts.Scan)
+func (w *WarpService) StartWarpOnWarp() error {
+	w.l.Info("running in warp-on-warp (gool) mode")
+	w.ctx, w.ctxCancelFunc = context.WithCancel(context.Background())
+
+	endpoints := []string{w.opts.Endpoint, w.opts.Endpoint}
+	if w.opts.Scan != nil {
+		e, err := w.ScanEndpoints(w.ctx)
 		if err != nil {
 			return err
 		}
+		endpoints = e
+	}
+	w.l.Info("using warp endpoints", "endpoints", endpoints)
 
-		l.Debug("scan results", "endpoints", res)
+	// just run primary warp on bindAddress
+	if err := runWarpOnWarp(w.ctx, w.l, w.opts, endpoints); err != nil {
+		return err
+	}
 
-		endpoints = make([]string, len(res))
-		for i := 0; i < len(res); i++ {
-			endpoints[i] = res[i].AddrPort.String()
+	return nil
+}
+
+func (w *WarpService) StartPsiphonOnWarp() error {
+	w.l.Info("running in Psiphon (cfon) mode")
+	w.ctx, w.ctxCancelFunc = context.WithCancel(context.Background())
+
+	endpoints := []string{w.opts.Endpoint, w.opts.Endpoint}
+	if w.opts.Scan != nil {
+		e, err := w.ScanEndpoints(w.ctx)
+		if err != nil {
+			return err
 		}
+		endpoints = e
 	}
-	l.Info("using warp endpoints", "endpoints", endpoints)
+	w.l.Info("using warp endpoints", "endpoints", endpoints)
 
-	var warpErr error
-	switch {
-	case opts.Psiphon != nil:
-		l.Info("running in Psiphon (cfon) mode")
-		// run primary warp on a random tcp port and run psiphon on bind address
-		warpErr = runWarpWithPsiphon(ctx, l, opts, endpoints[0])
-	case opts.Gool:
-		l.Info("running in warp-in-warp (gool) mode")
-		// run warp in warp
-		warpErr = runWarpInWarp(ctx, l, opts, endpoints)
-	default:
-		l.Info("running in normal warp mode")
-		// just run primary warp on bindAddress
-		warpErr = runWarp(ctx, l, opts, endpoints[0])
+	// just run primary warp on bindAddress
+	if err := runWarpWithPsiphon(w.ctx, w.l, w.opts, endpoints[0]); err != nil {
+		return err
 	}
 
-	return warpErr
+	return nil
+}
+
+func (w *WarpService) Stop() {
+	if w.ctxCancelFunc != nil {
+		w.ctxCancelFunc()
+	}
 }
 
 func runWireguard(ctx context.Context, l *slog.Logger, opts WarpOptions) error {
@@ -167,7 +221,7 @@ func runWireguard(ctx context.Context, l *slog.Logger, opts WarpOptions) error {
 	for _, t := range []string{"t1", "t2"} {
 		// Create userspace tun network stack
 		tunDev, tnet, werr = netstack.CreateNetTUN(conf.Interface.Addresses, conf.Interface.DNS, conf.Interface.MTU)
-		if err != nil {
+		if werr != nil {
 			continue
 		}
 
@@ -291,7 +345,7 @@ func runWarp(ctx context.Context, l *slog.Logger, opts WarpOptions, endpoint str
 	return nil
 }
 
-func runWarpInWarp(ctx context.Context, l *slog.Logger, opts WarpOptions, endpoints []string) error {
+func runWarpOnWarp(ctx context.Context, l *slog.Logger, opts WarpOptions, endpoints []string) error {
 	// make primary identity
 	ident1, err := warp.LoadOrCreateIdentity(l, path.Join(opts.CacheDir, "primary"), opts.License)
 	if err != nil {

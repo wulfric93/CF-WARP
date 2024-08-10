@@ -151,8 +151,21 @@ func main() {
 
 	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	go func() {
-		if err := app.RunWarp(ctx, l, opts); err != nil {
-			fatal(l, err)
+		ws := app.NewWarpService(l, opts)
+
+		switch {
+		case opts.Psiphon != nil:
+			if err := ws.StartPsiphonOnWarp(); err != nil {
+				fatal(l, err)
+			}
+		case opts.Gool:
+			if err := ws.StartWarpOnWarp(); err != nil {
+				fatal(l, err)
+			}
+		default:
+			if err := ws.StartWarp(); err != nil {
+				fatal(l, err)
+			}
 		}
 	}()
 
